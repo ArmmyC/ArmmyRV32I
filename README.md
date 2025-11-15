@@ -54,7 +54,7 @@ This core successfully implements all major instruction types from the RV32I spe
 
 ## **4.Project Structure \& Modules**
 
-The processor is built modularly, with all components instantiated and wired together in the top-level `RV32I\\\_Core.v` file.
+The processor is built modularly, with all components instantiated and wired together in the top-level `RV32I_Core.v` file.
 
 
 
@@ -121,5 +121,6 @@ The `ClockDivider.v` module is included to slow down the 100MHz board clock for 
 
 
 Hope someone finds this useful!
+
 
 
