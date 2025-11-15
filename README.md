@@ -22,7 +22,7 @@ Hello, I'm Armmy! This is a 32-bit CPU core built from the ground up in Verilog.
 
 Below is the complete data path diagram for the processor. It shows all major components, MUXes, and the flow of control and data signals required to implement the full `RV32I` instruction set.
 
-!\[Data Path](https://github.com/ArmmyC/ArmmyRV32I/blob/main/pic/RV32IDataPathByArmmy.drawio.png)
+!\[alt text](https://github.com/ArmmyC/ArmmyRV32I/blob/main/pic/RV32IDataPathByArmmy.drawio.png "datapath")
 
 
 
@@ -58,9 +58,11 @@ The processor is built modularly, with all components instantiated and wired tog
 
 
 
-| Control Path |
 
----
+
+### **Control Path** 
+
+
 
 | Module | Purpose |
 
@@ -74,9 +76,11 @@ The processor is built modularly, with all components instantiated and wired tog
 
 
 
-|Data Path (Execution)|
 
----
+
+### **Data Path (Execution)**
+
+
 
 | Module | Purpose |
 
@@ -94,41 +98,43 @@ The processor is built modularly, with all components instantiated and wired tog
 
 
 
-|Data Path (Memory)|
-
----
 
 
-
-| Module | Purpose |
-
---- | ---
-
-| InstructionMemory.v | A ROM that holds the program. Reads instruction.mem on initialization. |
-
-| DataMemory.v | A "smart" RAM that supports lw/lh/lb and sw/sh/sb using a byte\_enable\_mask. |
-
-| LoadExtender.v | Takes the 32-bit word from DataMemory and correctly selects and sign/zero-extends the byte or half-word for lb, lh, lbu, lhu. |
-
-| MUXRegisterWrite.v | 4-to-1 MUX. Selects which data is written back to the Register File (ALU\_result, Memory\_data, PC+4, or Immediate\_U\_type). |
+### **Data Path (Memory)**
 
 
 
-|Data Path (PC Control)|
-
----
-
-| Module | Purpose |
+Module | Purpose 
 
 --- | ---
 
-| ProgramCounter.v | A simple register that holds the address of the current instruction and updates on each clock cycle. |
+InstructionMemory.v | A ROM that holds the program. Reads instruction.mem on initialization.
 
-| PC4Adder.v | A simple adder that calculates PC + 4. |
+DataMemory.v | A "smart" RAM that supports lw/lh/lb and sw/sh/sb using a byte\_enable\_mask. 
 
-| PCBranchAdder.v | A simple adder that calculates the branch/jump target (PC + Immediate). |
+LoadExtender.v | Takes the 32-bit word from DataMemory and correctly selects and sign/zero-extends the byte or half-word for lb, lh, lbu, lhu. 
 
-| MUXPC.v | 3-to-1 MUX. Selects the next PC address from PC+4, BranchTargetAddress, or ALU\_result (for jalr). |
+MUXRegisterWrite.v | 4-to-1 MUX. Selects which data is written back to the Register File (ALU\_result, Memory\_data, PC+4, or Immediate\_U\_type). 
+
+
+
+
+
+### **Data Path (PC Control)**
+
+
+
+Module | Purpose
+
+--- | ---
+
+ProgramCounter.v | A simple register that holds the address of the current instruction and updates on each clock cycle.
+
+PC4Adder.v | A simple adder that calculates PC + 4.
+
+PCBranchAdder.v | A simple adder that calculates the branch/jump target (PC + Immediate).
+
+MUXPC.v | 3-to-1 MUX. Selects the next PC address from PC+4, BranchTargetAddress, or ALU\_result (for jalr).
 
 
 
