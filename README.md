@@ -12,7 +12,7 @@ Hello, I'm Armmy! This is a 32-bit CPU core built from the ground up in Verilog.
 
 * **Instruction Set Architecture (ISA):** `RV32I` (Base Integer Instruction Set)
 * **Hardware Structure (HSA):** `Single-Cycle`
-* **Memory Architecture:** `Modified Harvard` (separate 32-bit buses for Instruction and Data memory)
+* **Memory Architecture:** `Harvard` (separate 32-bit buses for Instruction and Data memory)
 
 
 
@@ -121,6 +121,7 @@ The `ClockDivider.v` module is included to slow down the 100MHz board clock for 
 
 
 Hope someone finds this useful!
+
 
 
 
