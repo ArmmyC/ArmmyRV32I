@@ -1,127 +1,131 @@
-# **RV32I Single-Cycle CPU Core in Verilog**
+# ArmmyRV32I
 
+ArmmyRV32I is a modular, single-cycle 32-bit RISC-V processor core written in Verilog. It implements the main integer arithmetic, load/store, branch, and jump instructions from the RV32I base ISA and is intended for learning, simulation, and FPGA experimentation.
 
+## Overview
 
-Hello, I'm Armmy! This is a 32-bit CPU core built from the ground up in Verilog. It was designed as a project to understand and implement the fundamentals of computer architecture.This processor is fully functional and capable of running compiled C code or RISC-V assembly that adheres to the `RV32I` base integer instruction set.
+The core uses a Harvard-style organization with separate instruction and data memories. [`src/RV32I_Core.v`](src/RV32I_Core.v) connects the program counter, decoder and control path, register file, ALU, immediate generator, branch logic, memories, and write-back multiplexers.
 
+The top-level core accepts a clock and active-high reset:
 
+```verilog
+module RV32I_Core(
+    input clk_in,
+    input reset
+);
+```
 
+`ClockDivider` is configured for a 100 MHz input clock and supplies a 1 MHz clock to the processor state elements.
 
+## Datapath
 
-## **1. Specifications**
+![RV32I single-cycle datapath](pic/RV32IDataPathByArmmy.drawio.png)
 
-* **Instruction Set Architecture (ISA):** `RV32I` (Base Integer Instruction Set)
-* **Hardware Structure (HSA):** `Single-Cycle`
-* **Memory Architecture:** `Harvard` (separate 32-bit buses for Instruction and Data memory)
+## Features
 
+- Single-cycle, 32-bit RISC-V datapath
+- 32 general-purpose registers with `x0` hardwired to zero
+- Separate 4 KiB instruction and data memories
+- Asynchronous register and memory reads with synchronous register and data-memory writes
+- Byte, half-word, and word loads and stores
+- Signed and unsigned comparisons and load extension
+- PC-relative branches, `jal`, `jalr`, `lui`, and `auipc`
+- Modular RTL with standalone testbenches for the ALU, instruction memory, and complete core
+- VCD waveform generation from each included testbench
 
+## Supported Instructions
 
+| Format | Instructions |
+|---|---|
+| Register-register | `add`, `sub`, `sll`, `slt`, `sltu`, `xor`, `srl`, `sra`, `or`, `and` |
+| Register-immediate | `addi`, `slli`, `slti`, `sltiu`, `xori`, `srli`, `srai`, `ori`, `andi` |
+| Loads | `lb`, `lh`, `lw`, `lbu`, `lhu` |
+| Stores | `sb`, `sh`, `sw` |
+| Branches | `beq`, `bne`, `blt`, `bge`, `bltu`, `bgeu` |
+| Jumps | `jal`, `jalr` |
+| Upper immediates | `lui`, `auipc` |
 
+System instructions, fence instructions, exceptions, interrupts, and CSRs are not implemented.
 
-## **2. Core Data Path**
+## Getting Started
 
-Below is the complete data path diagram for the processor. It shows all major components, MUXes, and the flow of control and data signals required to implement the full `RV32I` instruction set.
+### Prerequisites
 
-![alt text](https://github.com/ArmmyC/ArmmyRV32I/blob/main/pic/RV32IDataPathByArmmy.drawio.png "datapath")
+Use a Verilog simulator or FPGA tool that supports `$readmemh` and VCD system tasks. The source headers and project layout are compatible with a typical AMD Vivado RTL project, but no tool-specific project files or command scripts are included.
 
+### Configure Program Memory
 
+Machine code is loaded into instruction memory during initialization. A small example program is provided in [`src/instruction.mem`](src/instruction.mem).
 
+Before simulation or synthesis, update the `$readmemh` filename in [`src/InstructionMemory.v`](src/InstructionMemory.v) to a path that resolves to that file in your environment. The repository currently contains the original author's absolute Windows path:
 
+```verilog
+$readmemh("C:/path/to/ArmmyRV32I/src/instruction.mem", memory);
+```
 
-## **3. Implemented Instructions**
+The memory file contains one 32-bit hexadecimal instruction per line. The bundled program performs the following operations and then loops:
 
-This core successfully implements all major instruction types from the RV32I specification:
+```text
+addi x1, x0, 5
+addi x2, x0, 10
+add  x3, x1, x2
+sw   x3, 0(x0)
+jal  x0, 0
+```
 
-**R-type**: `add`, `sub`, `sll`, `slt`, `sltu`, `xor`, `srl`, `sra`, `or`, `and`
+### Simulate the Core
 
-**I-type**: `addi`, `slti`, `sltiu`, `xori`, `ori`, `andi`
+1. Add every `.v` file under `src/` as design sources.
+2. Add `src/instruction.mem` as a memory initialization file and configure the path described above.
+3. Add the desired file from `testbench/` as a simulation source.
+4. Select its testbench module as the simulation top.
+5. Run the simulation and inspect the generated VCD waveform.
 
-**I-type (Load)**: `lb`, `lh`, `lw`, `lbu`, `lhu`
+For the complete processor, use `tb_RV32I_Core` as the simulation top. Its input clock has a 10 ns period, matching the divider's expected 100 MHz input.
 
-**I-type (Jump)**: `jalr`
+## Testbenches
 
-**S-type**: `sb`, `sh`, `sw`
+| Top module | File | Coverage |
+|---|---|---|
+| `tb_ALU` | [`testbench/tb_ALU.v`](testbench/tb_ALU.v) | Steps through the ALU control values and writes `waveform.vcd` |
+| `tb_InstructionMemory` | [`testbench/tb_InstructionMemory.v`](testbench/tb_InstructionMemory.v) | Reads the first ten word-aligned instruction addresses and writes `InstructionMemory.vcd` |
+| `tb_RV32I_Core` | [`testbench/tb_RV32I_Core.v`](testbench/tb_RV32I_Core.v) | Resets and runs the integrated core, writing `waveform.vcd` |
 
-**B-type**: `beq`, `bne`, `blt`, `bge`, `bltu`, `bgeu`
+These are waveform-oriented stimulus testbenches; they do not contain self-checking assertions.
 
-**U-type**: `lui`, `auipc`
+## Project Structure
 
-**J-type**: `jal`
-
-
-
-
-
-## **4.Project Structure \& Modules**
-
-The processor is built modularly, with all components instantiated and wired together in the top-level `RV32I_Core.v` file.
-
-
-
-### **Control Path** 
-
-
-
-|  Module       |  Purpose       | 
-| ------------- |:-------------:| 
-| ControlUnit.v | The "brain" of the CPU. Decodes the Op\_code to generate all 11 control signals. |
-| ALUControl.v | A helper module that decodes funct3, funct7, and ALU\_op to generate the final 4-bit ALU\_control signal. |
-| BranchLogicUnit.v | A helper module that calculates the branch\_condition\_met signal by checking Z and ALU\_result\[0] against funct3. 
-
-
-
-
-
-### **Data Path (Execution)**
-
-
-
-| Module | Purpose |
---- | ---
-| ALU.v | The main Arithmetic Logic Unit. Performs all math (add, sub) and logic (and, or, slt) operations. |
-| RegisterFiles.v | Contains the 32 general-purpose 32-bit registers. Supports two asynchronous reads and one synchronous write. x0 is hardwired to zero. |
-| ImmExtender.v | A critical (and complex) module that decodes, reassembles, and sign-extends the immediate values for all I, S, B, U, and J types. |
-| MUXALUSrcA.v | 2-to-1 MUX. Selects the first ALU input (rs1 or PC). |
-| MUXALUSrcB.v | 2-to-1 MUX. Selects the second ALU input (rs2 or Immediate). 
-
-
-
-
-
-### **Data Path (Memory)**
-
-
-
-Module | Purpose 
---- | ---
-InstructionMemory.v | A ROM that holds the program. Reads instruction.mem on initialization.
-DataMemory.v | A "smart" RAM that supports lw/lh/lb and sw/sh/sb using a byte\_enable\_mask. 
-LoadExtender.v | Takes the 32-bit word from DataMemory and correctly selects and sign/zero-extends the byte or half-word for lb, lh, lbu, lhu. 
-MUXRegisterWrite.v | 4-to-1 MUX. Selects which data is written back to the Register File (ALU\_result, Memory\_data, PC+4, or Immediate\_U\_type). 
-
-
-
-
-
-### **Data Path (PC Control)**
-
-
-
-Module | Purpose
---- | ---
-ProgramCounter.v | A simple register that holds the address of the current instruction and updates on each clock cycle.
-PC4Adder.v | A simple adder that calculates PC + 4.
-PCBranchAdder.v | A simple adder that calculates the branch/jump target (PC + Immediate).
-MUXPC.v | 3-to-1 MUX. Selects the next PC address from PC+4, BranchTargetAddress, or ALU\_result (for jalr).
-
-
-
-The `ClockDivider.v` module is included to slow down the 100MHz board clock for easier debugging with LEDs.
-
-
-
-Hope someone finds this useful!
-
-
-
-
+```text
+.
+|-- pic/
+|   `-- RV32IDataPathByArmmy.drawio.png
+|-- src/
+|   |-- RV32I_Core.v          # Top-level processor
+|   |-- ControlUnit.v         # Opcode decoder and control signals
+|   |-- ALU.v                 # Arithmetic, logic, shifts, and comparisons
+|   |-- ALUControl.v          # funct3/funct7 ALU decoder
+|   |-- RegisterFiles.v       # 32 x 32-bit register file
+|   |-- InstructionMemory.v   # 4 KiB program memory
+|   |-- DataMemory.v          # 4 KiB byte-enabled data memory
+|   |-- ImmExtender.v         # I/S/B/U/J immediate generation
+|   |-- LoadExtender.v        # Byte and half-word load extension
+|   |-- BranchLogicUnit.v     # Branch condition evaluation
+|   |-- ClockDivider.v        # 100 MHz to 1 MHz divider
+|   |-- MUX*.v                # ALU, PC, and write-back selection
+|   |-- PC*.v                 # Program counter and PC adders
+|   `-- instruction.mem       # Example machine-code program
+|-- testbench/                # Simulation testbenches
+|-- LICENSE
+`-- README.md
+```
+
+## Implementation Notes
+
+- Instruction and data memories each contain 1,024 32-bit words. Address bits `[11:2]` select a word.
+- The design does not detect or trap misaligned memory accesses.
+- `jalr` selects the raw ALU result as the next PC; the implementation does not explicitly clear address bit 0 as required by the RISC-V specification.
+- The top-level module exposes only `clk_in` and `reset`; there is no external memory bus, debug port, or memory-mapped I/O interface.
+
+## License
+
+See [`LICENSE`](LICENSE) for the repository's non-commercial use and attribution terms.
